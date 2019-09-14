@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/all_games"
+        style="@style/TitleText"
+        android:text="@string/all_games" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/games"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/all_games"
+        android:fadeScrollbars="false"
+        android:scrollbars="vertical" />
+
+    <ProgressBar
+        android:id="@+id/spinner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minWidth="20dp"
+        android:minHeight="20dp"
+        android:padding="5dp"
+        android:visibility="gone" />
+
+    <Button
+        android:id="@+id/add_game"
+        style="@style/MyButton"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10dp"
+        android:text="@string/add_game_result"
+        app:icon="@drawable/add_game" />
+
+</RelativeLayout>

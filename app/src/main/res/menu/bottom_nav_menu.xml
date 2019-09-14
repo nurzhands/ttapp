@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/playing"
+        android:icon="@drawable/playing"
+        android:title="@string/playing" />
+
+    <item
+        android:id="@+id/media"
+        android:icon="@drawable/media"
+        android:title="@string/media" />
+
+    <item
+        android:id="@+id/ratings"
+        android:icon="@drawable/ratings"
+        android:title="@string/ratings" />
+
+    <item
+        android:id="@+id/games"
+        android:icon="@drawable/games"
+        android:title="@string/games" />
+
+</menu>

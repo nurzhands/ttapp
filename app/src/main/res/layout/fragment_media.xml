@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/media_text"
+        style="@style/TitleText"
+        android:text="@string/recent_media" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/medialist"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/add_media"
+        android:layout_below="@id/media_text"
+        android:clipToPadding="true"
+        android:fadeScrollbars="false"
+        android:scrollbarSize="3dp"
+        android:scrollbars="vertical" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/add_media"
+        style="@style/MyButton"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:text="@string/add_media"
+        app:icon="@drawable/add_media" />
+</RelativeLayout>

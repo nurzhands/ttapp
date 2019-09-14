@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <TextView
+        android:id="@+id/currently"
+        style="@style/TitleText"
+        android:text="@string/currently" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/players"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/let_know"
+        android:layout_below="@id/currently"
+        android:scrollbars="vertical" />
+
+    <TextView
+        android:id="@+id/no_players_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/currently"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:drawableLeft="@drawable/no_players"
+        android:gravity="center"
+        android:text="@string/no_players"
+        android:textSize="22sp" />
+
+    <TextView
+        android:id="@+id/let_know"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/buttons"
+        android:gravity="center"
+        android:padding="10dp"
+        android:text="@string/let_know"
+        android:textStyle="bold" />
+
+    <LinearLayout
+        android:id="@+id/buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/check_in"
+            style="@style/MyButton"
+            android:text="@string/check_in"
+            app:backgroundTint="@android:color/holo_green_dark"
+            app:icon="@drawable/add_game" />
+
+        <View
+            android:layout_width="30dp"
+            android:layout_height="1dp" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/check_out"
+            style="@style/MyButton"
+            android:text="@string/check_out"
+            app:backgroundTint="@android:color/holo_red_dark"
+            app:icon="@drawable/add_game" />
+    </LinearLayout>
+
+</RelativeLayout>

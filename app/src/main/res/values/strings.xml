@@ -1,0 +1,38 @@
+<resources>
+    <string name="app_name">KX TT</string>
+    <string name="facebook_application_id" translatable="false">2396196037373781</string>
+    <!-- Facebook Application ID, prefixed by 'fb'. Enables Chrome Custom tabs. -->
+    <string name="facebook_login_protocol_scheme" translatable="false">fb2396196037373781</string>
+    <string name="sign_in_cancelled">Sign-In Cancelled</string>
+    <string name="no_internet_connection">No internet connection</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="logout">Log Out</string>
+    <string name="check_in">Check In</string>
+    <string name="check_out">Check Out</string>
+    <string name="currently">Players currently in KX</string>
+    <string name="no_user">Not signed-in</string>
+    <string name="no_players">\tNo players checked in yet.</string>
+    <string name="welcome">🏓 Welcome to KX TT, %s!</string>
+    <string name="let_know">Let other players know if you\'re currently in KX by clicking one of the buttons below! Thanks!</string>
+    <string name="recent_media">Latest media from KX</string>
+    <string name="no_storage_permission">Please give storage permission to add photo/video</string>
+    <string name="error_uploading">Error uploading</string>
+    <string name="open_permissions">Settings</string>
+
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="add_media">Add media</string>
+    <string name="current_ratings">Current Ratings</string>
+    <string name="all_games">All games</string>
+    <string name="add_game_result">Add Game Result</string>
+    <string name="games_won">#Games you won</string>
+    <string name="games_lost">#Games you lost</string>
+    <string name="playing">Playing</string>
+    <string name="media">Media</string>
+    <string name="ratings">Ratings</string>
+    <string name="games">Games</string>
+    <string name="game_rules">Enter numbers between 0 and 4</string>
+    <string name="no_location_permission">Location permission is required to check in</string>
+</resources>

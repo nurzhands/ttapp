@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "44917407604",
+    "firebase_url": "https://kxtt-2c330.firebaseio.com",
+    "project_id": "kxtt-2c330",
+    "storage_bucket": "kxtt-2c330.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44917407604:android:4237e23f53ccbeef71b621",
+        "android_client_info": {
+          "package_name": "nurzhands.kxtt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "44917407604-9tkbhdcjnmeecvlimj4bd5hp1sp7sjq9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "nurzhands.kxtt",
+            "certificate_hash": "8c7f0dfc731adc5c85b52173353e656f8ded13f2"
+          }
+        },
+        {
+          "client_id": "44917407604-pqnprars2aopmhkpbohuscgrspc4ne33.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC2Y1aYQms-R8y1DQXZXrWmHKhMdwUbDk8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "44917407604-pqnprars2aopmhkpbohuscgrspc4ne33.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
