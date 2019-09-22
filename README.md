@@ -1,2 +1,1 @@
-# kxtt
- KX TT app
+https://tabletennisapp.web.app/
