@@ -59,6 +59,8 @@ public class GamesFragment extends Fragment {
     private View spinner;
     private int checkedItem;
     private User selectedUser;
+    private String place;
+    private View noGamesText;
 
     public GamesFragment() {
     }
@@ -69,6 +71,7 @@ public class GamesFragment extends Fragment {
         sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        place = sp.getString("place", "");
     }
 
     @Override
@@ -100,6 +103,8 @@ public class GamesFragment extends Fragment {
     private void showGames() {
         addGames();
 
+        noGamesText = view.findViewById(R.id.no_games_text);
+
         games = view.findViewById(R.id.games);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false);
         games.setLayoutManager(linearLayoutManager);
@@ -108,7 +113,7 @@ public class GamesFragment extends Fragment {
         games.addItemDecoration(dividerItemDecoration);
 
         Query query = FirebaseFirestore.getInstance()
-                .collection("places/kx/games")
+                .collection("places/" + place + "/games")
                 .orderBy("timestamp", Query.Direction.DESCENDING);
 
         FirestoreRecyclerOptions<Game> options = new FirestoreRecyclerOptions.Builder<Game>()
@@ -156,6 +161,7 @@ public class GamesFragment extends Fragment {
                         // ...
                         Log.d(TAG, "data change");
                         games.smoothScrollToPosition(0);
+                        noGamesText.setVisibility(gameAdapter != null && gameAdapter.getItemCount() == 0 ? View.VISIBLE : View.INVISIBLE);
                     }
 
                     @Override
@@ -181,13 +187,13 @@ public class GamesFragment extends Fragment {
                 return user.getName();
             }
         }
-        return "N/A";
+        return getString(R.string.n_a);
     }
 
     private void loadUsers() {
         spinner = view.findViewById(R.id.spinner);
         spinner.setVisibility(View.VISIBLE);
-        db.collection("places/kx/players")
+        db.collection("places/" + place + "/players")
                 .get()
                 .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
                     @Override
@@ -201,7 +207,7 @@ public class GamesFragment extends Fragment {
                             spinner.setVisibility(View.GONE);
                             showGames();
                         } else {
-                            Toast.makeText(getActivity(), "Error getting documents: " + task.getException(), Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), getString(R.string.error_getting_documents) + task.getException(), Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -218,7 +224,7 @@ public class GamesFragment extends Fragment {
 
     private void showOpponentDialog() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getActivity());
-        builder.setTitle("Choose your opponent");
+        builder.setTitle(R.string.choose_opponent);
 
         for (int i = 0; i < users.size(); i++) {
             if (users.get(i).getUid().equals(user.getUid())) {
@@ -250,7 +256,7 @@ public class GamesFragment extends Fragment {
                 }
             }
         });
-        builder.setNegativeButton("Cancel", null);
+        builder.setNegativeButton(android.R.string.cancel, null);
 
         builder.create().show();
     }
@@ -264,7 +270,7 @@ public class GamesFragment extends Fragment {
         final EditText wonView = view.findViewById(R.id.won);
         final EditText lostView = view.findViewById(R.id.lost);
         builder.setView(view)
-                .setTitle("Pleaes enter your scores")
+                .setTitle(R.string.enter_scores)
                 .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
@@ -274,7 +280,7 @@ public class GamesFragment extends Fragment {
                             sendGameResult(won, lost);
                             dialog.dismiss();
                         } else {
-                            Toast.makeText(getActivity(), "Enter correct numbers", Toast.LENGTH_LONG).show();
+                            Toast.makeText(getActivity(), R.string.enter_numbers, Toast.LENGTH_LONG).show();
                         }
                     }
                 });
@@ -283,12 +289,12 @@ public class GamesFragment extends Fragment {
 
     private void sendGameResult(int won, int lost) {
         Game game = new Game(user.getDisplayName(), selectedUser.getName(), user.getUid(), selectedUser.getUid(), won, lost, selectedUser.getToken());
-        db.collection("places/kx/pendingresults").add(game).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+        db.collection("places/" + place + "/pendingresults").add(game).addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
             @Override
             public void onSuccess(DocumentReference documentReference) {
                 MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getActivity());
-                builder.setTitle("Game result needs approval");
-                builder.setMessage("Result will be added after " + selectedUser.getName() + " approves.");
+                builder.setTitle(R.string.result_needs_approval);
+                builder.setMessage(getString(R.string.result_name_approval, selectedUser.getName()));
                 builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

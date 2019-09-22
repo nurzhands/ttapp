@@ -5,14 +5,16 @@ public class Media {
     private boolean isVideo;
     private long timestamp;
     private String owner;
+    private String ownerId;
 
     public Media() {}
 
-    public Media(String url, boolean isVideo, String owner) {
+    public Media(String url, boolean isVideo, String owner, String ownerId) {
         this.url = url;
         this.isVideo = isVideo;
-        this.timestamp = System.currentTimeMillis();
         this.owner = owner;
+        this.ownerId = ownerId;
+        this.timestamp = System.currentTimeMillis();
     }
 
     public String getUrl() {
@@ -45,5 +47,13 @@ public class Media {
 
     public void setOwner(String owner) {
         this.owner = owner;
+    }
+
+    public String getOwnerId() {
+        return ownerId;
+    }
+
+    public void setOwnerId(String ownerId) {
+        this.ownerId = ownerId;
     }
 }

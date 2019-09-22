@@ -2,6 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_change_place"
+        android:icon="@drawable/change_place"
+        android:title="@string/change_place"
+        app:showAsAction="always"/>
+
+    <item
         android:id="@+id/action_logout"
         android:icon="@drawable/logout"
         android:title="@string/logout"

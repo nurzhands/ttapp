@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">KX TT</string>
+    <string name="app_name">TT App</string>
     <string name="facebook_application_id" translatable="false">2396196037373781</string>
     <!-- Facebook Application ID, prefixed by 'fb'. Enables Chrome Custom tabs. -->
     <string name="facebook_login_protocol_scheme" translatable="false">fb2396196037373781</string>
@@ -9,30 +9,58 @@
     <string name="logout">Log Out</string>
     <string name="check_in">Check In</string>
     <string name="check_out">Check Out</string>
-    <string name="currently">Players currently in KX</string>
+    <string name="currently">Players currently\nin %s</string>
     <string name="no_user">Not signed-in</string>
     <string name="no_players">\tNo players checked in yet.</string>
-    <string name="welcome">🏓 Welcome to KX TT, %s!</string>
-    <string name="let_know">Let other players know if you\'re currently in KX by clicking one of the buttons below! Thanks!</string>
-    <string name="recent_media">Latest media from KX</string>
+    <string name="welcome">🏓 Welcome!</string>
+    <string name="let_know">Let other players know if you\'re currently there by clicking one of the buttons below! Thanks!</string>
+    <string name="recent_media">Recent media</string>
     <string name="no_storage_permission">Please give storage permission to add photo/video</string>
     <string name="error_uploading">Error uploading</string>
     <string name="open_permissions">Settings</string>
 
-    <string name="title_home">Home</string>
-    <string name="title_dashboard">Dashboard</string>
-    <string name="title_notifications">Notifications</string>
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="add_media">Add media</string>
     <string name="current_ratings">Current Ratings</string>
     <string name="all_games">All games</string>
     <string name="add_game_result">Add Game Result</string>
-    <string name="games_won">#Games you won</string>
-    <string name="games_lost">#Games you lost</string>
     <string name="playing">Playing</string>
     <string name="media">Media</string>
     <string name="ratings">Ratings</string>
     <string name="games">Games</string>
     <string name="game_rules">Enter numbers between 0 and 4</string>
     <string name="no_location_permission">Location permission is required to check in</string>
+    <string name="change_place">Change place</string>
+    <string name="choose_place">Choose your place</string>
+    <string name="approve_result">Do you approve this result?</string>
+    <string name="sign_out">Sign out?</string>
+    <string name="choose_opponent">Choose your opponent</string>
+    <string name="enter_scores">Pleaes enter your scores</string>
+    <string name="enter_numbers">Enter correct numbers</string>
+    <string name="result_needs_approval">Game result needs approval</string>
+    <string name="result_name_approval">Result will be added after %1$s approves.</string>
+    <string name="n_a">N/A</string>
+    <string name="sign_in_error">Sign-in error:</string>
+    <string name="error_getting_documents">Error getting documents:</string>
+    <string name="ago">ago.</string>
+    <string name="capture_image_or_video">Capture Image or Video</string>
+    <string name="upload_progress">Upload is %1$s done</string>
+    <string name="upload_pause">Upload is paused</string>
+    <string name="uploaded">Uploaded!</string>
+    <string name="upload_fail">Failed to upload</string>
+    <string name="now">now</string>
+    <string name="min">m</string>
+    <string name="hour">h</string>
+    <string name="day">d</string>
+    <string name="checking_location">Checking your location..</string>
+    <string name="location_error">Error getting location</string>
+    <string name="location_too_far">Sorry, seems like your location is too far from %s TT!</string>
+    <string name="cant_check_in">Can\'t check in</string>
+    <string name="rating_tbd">TBD</string>
+    <string name="your_score">Your score</string>
+    <string name="their_score">Their score</string>
+    <string name="no_ratings">No ratings yet</string>
+    <string name="no_media">No media yet</string>
+    <string name="no_games">No games yet</string>
+    <string name="select_place">Select place</string>
+    <string name="delete_media">Delete media?</string>
 </resources>

@@ -8,8 +8,8 @@
 
     <TextView
         android:id="@+id/currently"
-        style="@style/TitleText"
-        android:text="@string/currently" />
+        android:gravity="center"
+        style="@style/TitleText" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/players"
@@ -26,7 +26,7 @@
         android:layout_below="@id/currently"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="30dp"
-        android:drawableLeft="@drawable/no_players"
+        android:drawableLeft="@drawable/nothing"
         android:gravity="center"
         android:text="@string/no_players"
         android:textSize="22sp" />

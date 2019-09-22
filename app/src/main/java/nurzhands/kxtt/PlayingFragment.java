@@ -68,6 +68,8 @@ public class PlayingFragment extends Fragment {
     private FirebaseUser user;
     private FirebaseFirestore db;
     private FusedLocationProviderClient fusedLocationClient;
+    private String place;
+    private String placeName;
 
     public PlayingFragment() {
     }
@@ -78,6 +80,7 @@ public class PlayingFragment extends Fragment {
         sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        place = sp.getString("place", "");
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(getActivity());
     }
 
@@ -86,10 +89,17 @@ public class PlayingFragment extends Fragment {
                              Bundle savedInstanceState) {
         view = inflater.inflate(R.layout.fragment_playing, container, false);
 
+        setupCurrently();
         showPlayers();
         setupButtons();
 
         return view;
+    }
+
+    private void setupCurrently() {
+        TextView currently = view.findViewById(R.id.currently);
+        placeName = sp.getString("placeName", "");
+        currently.setText(getString(R.string.currently, placeName));
     }
 
     @Override
@@ -148,7 +158,7 @@ public class PlayingFragment extends Fragment {
         players.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
 
         Query query = FirebaseFirestore.getInstance()
-                .collection("places/kx/playing")
+                .collection("places/" + place + "/playing")
                 .orderBy("timestamp", Query.Direction.DESCENDING);
 
         FirestoreRecyclerOptions<Player> options = new FirestoreRecyclerOptions.Builder<Player>()
@@ -161,7 +171,7 @@ public class PlayingFragment extends Fragment {
                     public void onBindViewHolder(PlayerHolder holder, int position, Player player) {
                         holder.view.setTag(player);
                         ((TextView) holder.view.findViewById(R.id.name)).setText(player.getName());
-                        ((TextView) holder.view.findViewById(R.id.timepassed)).setText(getTimeSpent(player.getTimestamp()));
+                        ((TextView) holder.view.findViewById(R.id.timepassed)).setText(getTimeSpent(getContext(), player.getTimestamp()));
                         Glide.with(getContext())
                                 .load(player.getPhotoUrl())
                                 .circleCrop()
@@ -214,7 +224,7 @@ public class PlayingFragment extends Fragment {
 
     private void addCurrentPlayer() {
         Player player = new Player(user.getDisplayName(), user.getPhotoUrl().toString(), System.currentTimeMillis());
-        db.collection("places/kx/playing").document(user.getUid()).set(player);
+        db.collection("places/" + place + "/playing").document(user.getUid()).set(player);
     }
 
     private void setupButtons() {
@@ -241,7 +251,7 @@ public class PlayingFragment extends Fragment {
                     return;
                 }
                 removeHint();
-                db.collection("places/kx/playing").document(user.getUid()).delete();
+                db.collection("places/" + place + "/playing").document(user.getUid()).delete();
             }
         });
     }
@@ -269,17 +279,17 @@ public class PlayingFragment extends Fragment {
         if (fusedLocationClient == null) {
             LocationServices.getFusedLocationProviderClient(getActivity());
         }
-        final Toast locationToast = Toast.makeText(getContext(), "Checking your location..", Toast.LENGTH_SHORT);
+        final Toast locationToast = Toast.makeText(getContext(), R.string.checking_location, Toast.LENGTH_SHORT);
         locationToast.show();
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(getActivity(), new OnSuccessListener<Location>() {
                     @Override
                     public void onSuccess(Location location) {
                         locationToast.cancel();
-                        if (location != null && closeToKx(location)) {
+                        if (location != null && closeToPlace(location)) {
                             addCurrentPlayer();
                         } else {
-                            showLocationError(location == null ? "Error getting location" : "Sorry, seems like your location is too far from KX TT!");
+                            showLocationError(location == null ? getString(R.string.location_error) : getString(R.string.location_too_far, placeName));
                         }
                     }
                 });
@@ -287,7 +297,7 @@ public class PlayingFragment extends Fragment {
 
     private void showLocationError(String errorMessage) {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getActivity());
-        builder.setTitle("Can't check in");
+        builder.setTitle(R.string.cant_check_in);
         builder.setMessage(errorMessage);
         builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
             @Override
@@ -298,11 +308,11 @@ public class PlayingFragment extends Fragment {
         builder.create().show();
     }
 
-    private boolean closeToKx(Location location) {
-        Location kxLocation = new Location("kx");
-        kxLocation.setLatitude(51.5355787);
-        kxLocation.setLongitude(-0.1234235);
-        float dist = kxLocation.distanceTo(location);
+    private boolean closeToPlace(Location userLocation) {
+        Location placeLocation = new Location(place);
+        placeLocation.setLatitude(sp.getFloat("placeLat", 0));
+        placeLocation.setLongitude(sp.getFloat("placeLon", 0));
+        float dist = placeLocation.distanceTo(userLocation);
         return dist <= 500; // meters
     }
 

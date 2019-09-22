@@ -23,6 +23,18 @@
         android:scrollbarSize="3dp"
         android:scrollbars="vertical" />
 
+    <TextView
+        android:id="@+id/no_media_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/media_text"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:drawableLeft="@drawable/nothing"
+        android:gravity="center"
+        android:text="@string/no_media"
+        android:textSize="22sp" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/add_media"
         style="@style/MyButton"

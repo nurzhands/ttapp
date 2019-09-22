@@ -3,7 +3,9 @@ package nurzhands.kxtt;
 
 import android.Manifest;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -17,6 +19,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.os.Environment;
+import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
@@ -35,6 +38,7 @@ import com.firebase.ui.firestore.FirestoreRecyclerOptions;
 import com.google.android.gms.tasks.Continuation;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -71,6 +75,7 @@ public class MediaFragment extends Fragment {
 
     private static final int PERMISSION_STORAGE = 100;
     private static final int RC_MEDIA = 101;
+    private static final int MEDIA_ID = 102;
 
     private RecyclerView media;
     private View addMedia;
@@ -82,6 +87,10 @@ public class MediaFragment extends Fragment {
 
     private FirebaseUser user;
     private FirebaseFirestore db;
+    private SharedPreferences sp;
+    private String place;
+    private View noMediaText;
+    private FirebaseAuth auth;
 
     public MediaFragment() {
         // Required empty public constructor
@@ -92,6 +101,9 @@ public class MediaFragment extends Fragment {
         super.onCreate(savedInstanceState);
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        auth = FirebaseAuth.getInstance();
+        sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        place = sp.getString("place", "");
     }
 
     @Override
@@ -103,6 +115,8 @@ public class MediaFragment extends Fragment {
     }
 
     private void showMedia() {
+        noMediaText = view.findViewById(R.id.no_media_text);
+
         addMedia = view.findViewById(R.id.add_media);
         addMedia.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -122,9 +136,8 @@ public class MediaFragment extends Fragment {
         media.setLayoutManager(new GridLayoutManager(getContext(), 3));
 
         Query query = FirebaseFirestore.getInstance()
-                .collection("places/kx/media")
-                .orderBy("timestamp", Query.Direction.DESCENDING)
-                .limit(20);
+                .collection("places/" + place + "/media")
+                .orderBy("timestamp", Query.Direction.DESCENDING);
 
         FirestoreRecyclerOptions<Media> options = new FirestoreRecyclerOptions.Builder<Media>()
                 .setQuery(query, Media.class)
@@ -134,6 +147,7 @@ public class MediaFragment extends Fragment {
             @Override
             public void onBindViewHolder(MediaHolder holder, int position, Media media) {
                 holder.view.setTag(media);
+                holder.view.setTag(R.id.media_id, getSnapshots().getSnapshot(position).getId());
                 RequestBuilder<Drawable> load = Glide.with(MediaFragment.this).load(media.getUrl());
                 if (media.isVideo()) {
                     load = load.apply(RequestOptions.bitmapTransform(new BlurTransformation(7, 3)));
@@ -151,12 +165,12 @@ public class MediaFragment extends Fragment {
                     @Override
                     public void onClick(View v) {
                         Media media = (Media) v.getTag();
-                        String mediaInfo = media.getOwner() + ", " + getTimeSpent(media.getTimestamp());
+                        String mediaInfo = media.getOwner() + ", " + getTimeSpent(getContext(), media.getTimestamp());
                         // TODO show this mediaInfo inside full screen
                         if (media.isVideo()) {
                             Intent intent = new Intent(getContext(), VideoActivity.class);
                             intent.putExtra("video_url", media.getUrl());
-                            intent.putExtra("video_info", mediaInfo + " ago.");
+                            intent.putExtra("video_info", mediaInfo + getString(R.string.ago));
                             startActivity(intent);
                         } else {
                             List<Media> list = new ArrayList<>();
@@ -173,6 +187,19 @@ public class MediaFragment extends Fragment {
                     }
                 });
 
+                view.setOnLongClickListener(new View.OnLongClickListener() {
+                    @Override
+                    public boolean onLongClick(View v) {
+                        Media media = (Media) v.getTag();
+                        String docId = (String) v.getTag(R.id.media_id);
+                        boolean admin = "dyussenaliyev@gmail.com".equals(user.getEmail()) || "erzhands@gmail.com".equals(user.getEmail());
+                        if (user.getUid().equals(media.getOwnerId()) || admin) {
+                            showDeleteMediaDialog(media, docId);
+                        }
+                        return true;
+                    }
+                });
+
                 return new MediaHolder(view);
             }
 
@@ -183,6 +210,7 @@ public class MediaFragment extends Fragment {
                 // ...
                 Log.d(TAG, "data change");
                 media.smoothScrollToPosition(0);
+                noMediaText.setVisibility(mediaAdapter != null && mediaAdapter.getItemCount() == 0 ? View.VISIBLE : View.INVISIBLE);
             }
 
             @Override
@@ -191,6 +219,26 @@ public class MediaFragment extends Fragment {
             }
         };
         media.setAdapter(mediaAdapter);
+    }
+
+    private void showDeleteMediaDialog(Media media, final String docId) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getActivity());
+        builder.setTitle(R.string.delete_media);
+        builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                db.collection("places/" + place + "/media").document(docId).delete();
+            }
+        });
+        builder.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.create().show();
+
     }
 
     private void doAddMedia() {
@@ -208,7 +256,7 @@ public class MediaFragment extends Fragment {
             takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, picUri);
         }
         Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        Intent chooserIntent = Intent.createChooser(takePictureIntent, "Capture Image or Video");
+        Intent chooserIntent = Intent.createChooser(takePictureIntent, getString(R.string.capture_image_or_video));
         chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takeVideoIntent});
         if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
             startActivityForResult(chooserIntent, RC_MEDIA);
@@ -280,7 +328,8 @@ public class MediaFragment extends Fragment {
                 if (toast != null) {
                     toast.cancel();
                 }
-                toast = Toast.makeText(getContext(), String.format(Locale.US, "Upload is %.02f", progress) + "% done", Toast.LENGTH_SHORT);
+                String percentage = String.format(Locale.US, "%.02f", progress) + "%";
+                toast = Toast.makeText(getContext(), getString(R.string.upload_progress, percentage), Toast.LENGTH_SHORT);
                 toast.show();
             }
         }).addOnPausedListener(new OnPausedListener<UploadTask.TaskSnapshot>() {
@@ -289,18 +338,18 @@ public class MediaFragment extends Fragment {
                 if (toast != null) {
                     toast.cancel();
                 }
-                Toast.makeText(getContext(), "Upload is paused", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), R.string.upload_pause, Toast.LENGTH_LONG).show();
             }
         });
 
     }
 
     private void addMediaToFirestore(Uri downloadUri, boolean isVideo) {
-        Media media = new Media(downloadUri.toString(), isVideo, user.getDisplayName().split(" ")[0]);
-        db.collection("places/kx/media").add(media).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
+        Media media = new Media(downloadUri.toString(), isVideo, user.getDisplayName().split(" ")[0], user.getUid());
+        db.collection("places/" + place + "/media").add(media).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
             @Override
             public void onComplete(@NonNull Task<DocumentReference> task) {
-                Toast.makeText(getContext(), task.isSuccessful() ? "Uploaded!" : "Failed to upload", Toast.LENGTH_LONG).show();
+                Toast.makeText(getContext(), task.isSuccessful() ? R.string.uploaded : R.string.upload_fail, Toast.LENGTH_LONG).show();
             }
         });
     }

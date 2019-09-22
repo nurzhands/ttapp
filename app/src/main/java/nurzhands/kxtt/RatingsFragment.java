@@ -47,6 +47,8 @@ public class RatingsFragment extends Fragment {
     private SharedPreferences sp;
     private FirebaseUser user;
     private FirebaseFirestore db;
+    private String place;
+    private TextView noRatingsText;
 
     public RatingsFragment() {
     }
@@ -57,6 +59,7 @@ public class RatingsFragment extends Fragment {
         sp = PreferenceManager.getDefaultSharedPreferences(getContext());
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
+        place = sp.getString("place", "");
     }
 
     @Override
@@ -86,11 +89,14 @@ public class RatingsFragment extends Fragment {
     }
 
     private void showRatings() {
+        noRatingsText = view.findViewById(R.id.no_ratings_text);
+
         ratings = view.findViewById(R.id.ratings);
         ratings.setLayoutManager(new LinearLayoutManager(getContext(), RecyclerView.VERTICAL, false));
 
         Query query = FirebaseFirestore.getInstance()
-                .collection("places/kx/players")
+                .collection("places/" + place + "/players")
+                .whereGreaterThan("rating", 0)
                 .orderBy("rating", Query.Direction.DESCENDING);
 
         FirestoreRecyclerOptions<User> options = new FirestoreRecyclerOptions.Builder<User>()
@@ -105,7 +111,7 @@ public class RatingsFragment extends Fragment {
                         TextView name = holder.view.findViewById(R.id.name);
                         name.setText(user.getName());
                         TextView rating = holder.view.findViewById(R.id.rating);
-                        rating.setText(user.getRating() == 0 ? "TBD" : String.valueOf(user.getRating()));
+                        rating.setText(user.getRating() == 0 ? getString(R.string.rating_tbd) : String.valueOf(user.getRating()));
                         boolean myself = user.getUid() == RatingsFragment.this.user.getUid();
                         name.setTypeface(null, myself ? Typeface.BOLD : Typeface.BOLD);
                         rating.setTypeface(null, myself ? Typeface.BOLD : Typeface.BOLD);
@@ -148,6 +154,7 @@ public class RatingsFragment extends Fragment {
                         // ...
                         Log.d(TAG, "data change");
                         ratings.smoothScrollToPosition(0);
+                        noRatingsText.setVisibility(userAdapter != null && userAdapter.getItemCount() == 0 ? View.VISIBLE : View.INVISIBLE);
                     }
 
                     @Override

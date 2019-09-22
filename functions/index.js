@@ -4,8 +4,9 @@ const admin = require('firebase-admin');
 admin.initializeApp();
 
 exports.modifyPlayer = functions.firestore
-    .document('places/kx/playing/{playerID}')
+    .document('places/{place}/playing/{playerID}')
     .onWrite((change, context) => {
+      const place = context.params.place;
       const player = change.after.exists ? change.after.data() : null;
       const oldDoc = change.before.data();
 
@@ -17,17 +18,18 @@ exports.modifyPlayer = functions.firestore
 
       const payload = {
         notification: {
-          title: !deleted ? 'New KX player!' : 'KX player leaves...',
+          title: !deleted ? `New ${place} player!` : `${place} player leaves...`,
           body: `${playerName} checked ` + (!deleted ? 'in!' : 'out.'),
         }
       };
 
-      return admin.messaging().sendToTopic("all", payload);
+      return admin.messaging().sendToTopic(place, payload);
     });
 
 exports.addMedia = functions.firestore
-    .document('places/kx/media/{mediaID}')
+    .document('places/{place}/media/{mediaID}')
     .onCreate((snap, context) => {
+      const place = context.params.place;
       const media = snap.data();
 
       console.log('media added');
@@ -36,17 +38,18 @@ exports.addMedia = functions.firestore
 
       const payload = {
         notification: {
-          title: 'New KX media added!',
+          title: `New ${place} media added!`,
           body: `${media.owner} added a ` + (pic ? 'picture!' : 'video!'),
         }
       };
 
-      return admin.messaging().sendToTopic("all", payload);
+      return admin.messaging().sendToTopic(place, payload);
     });
 
 exports.addGame = functions.firestore
-    .document('places/kx/games/{gameID}')
+    .document('places/{place}/games/{gameID}')
     .onCreate((snap, context) => {
+      const place = context.params.place;
       const game = snap.data();
 
       console.log('game added');
@@ -56,17 +59,18 @@ exports.addGame = functions.firestore
 
       const payload = {
         notification: {
-          title: 'New KX game result added!',
+          title: `New ${place} game result added!`,
           body: `${game.firstName} vs ${game.secondName}!`,
         }
       };
 
-      return admin.messaging().sendToTopic("all", payload);
+      return admin.messaging().sendToTopic(place, payload);
     });
 
 exports.addGameResult = functions.firestore
-    .document('places/kx/pendingresults/{resultID}')
+    .document('places/{place}/pendingresults/{resultID}')
     .onCreate((snap, context) => {
+      const place = context.params.place;
       const game = snap.data();
 
       console.log('pending game result added');

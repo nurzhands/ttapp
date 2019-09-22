@@ -97,7 +97,7 @@ public class VideoActivity extends AppCompatActivity {
         simpleCache = new SimpleCache(cacheFolder, cacheEvictor);
 
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this,
-                Util.getUserAgent(this, "KX TT"));
+                Util.getUserAgent(this, "TT App"));
         CacheDataSourceFactory cacheDataSourceFactory = new CacheDataSourceFactory(simpleCache, dataSourceFactory);
         MediaSource mediaSource = new ExtractorMediaSource.Factory(cacheDataSourceFactory).createMediaSource(Uri.parse(videoUrl));
         player.prepare(mediaSource);

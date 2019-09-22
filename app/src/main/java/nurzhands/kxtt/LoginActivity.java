@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
                 }
 
                 showSnackbar(R.string.unknown_error);
-                Log.e(TAG, "Sign-in error: ", response.getError());
+                Log.e(TAG, getString(R.string.sign_in_error), response.getError());
             }
         }
     }
