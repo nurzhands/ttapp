@@ -7,7 +7,7 @@ public class TimeToTextUtils {
         t = (System.currentTimeMillis() - t) / 1000 / 60;
         String ss;
         if (t == 0) {
-            ss = context.getString(R.string.now);
+            return context.getString(R.string.now);
         } else if (t < 60) {
             ss = t + context.getString(R.string.min);
         } else {
@@ -19,6 +19,6 @@ public class TimeToTextUtils {
                 ss = t + context.getString(R.string.day);
             }
         }
-        return ss;
+        return ss + " " +  context.getString(R.string.ago);
     }
 }

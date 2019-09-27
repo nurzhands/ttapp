@@ -6,6 +6,7 @@ public class User {
     private String uid;
     private String token;
     private int rating;
+    private boolean isAdmin;
 
     public User() {}
 
@@ -47,5 +48,13 @@ public class User {
 
     public void setRating(int rating) {
         this.rating = rating;
+    }
+
+    public boolean isAdmin() {
+        return isAdmin;
+    }
+
+    public void setAdmin(boolean admin) {
+        isAdmin = admin;
     }
 }

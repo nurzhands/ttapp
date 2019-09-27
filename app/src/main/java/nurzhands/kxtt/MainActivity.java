@@ -243,6 +243,7 @@ public class MainActivity extends AppCompatActivity {
                                 if (update == null) {
                                     update = new User();
                                 }
+                                sp.edit().putBoolean("admin", update.isAdmin()).apply();
                                 update.setName(user.getDisplayName());
                                 update.setPhotoUrl(user.getPhotoUrl().toString());
                                 update.setUid(user.getUid());

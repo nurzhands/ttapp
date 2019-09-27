@@ -2,33 +2,28 @@ package nurzhands.kxtt;
 
 
 import android.Manifest;
-import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.core.content.ContextCompat;
-import androidx.core.content.FileProvider;
-import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.os.Environment;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
 import android.provider.Settings;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.RequestBuilder;
@@ -53,12 +48,11 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 import com.stfalcon.imageviewer.StfalconImageViewer;
 import com.stfalcon.imageviewer.loader.ImageLoader;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.internal.entity.CaptureStrategy;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -67,7 +61,6 @@ import nurzhands.kxtt.models.Media;
 import nurzhands.kxtt.models.MediaHolder;
 
 import static android.app.Activity.RESULT_OK;
-import static android.os.Environment.getExternalStoragePublicDirectory;
 import static nurzhands.kxtt.TimeToTextUtils.getTimeSpent;
 
 public class MediaFragment extends Fragment {
@@ -75,14 +68,11 @@ public class MediaFragment extends Fragment {
 
     private static final int PERMISSION_STORAGE = 100;
     private static final int RC_MEDIA = 101;
-    private static final int MEDIA_ID = 102;
 
     private RecyclerView media;
     private View addMedia;
     private FirestoreRecyclerAdapter<Media, MediaHolder> mediaAdapter;
-    private Uri picUri;
     private Toast toast;
-    private File imageFile;
     private View view;
 
     private FirebaseUser user;
@@ -90,7 +80,6 @@ public class MediaFragment extends Fragment {
     private SharedPreferences sp;
     private String place;
     private View noMediaText;
-    private FirebaseAuth auth;
 
     public MediaFragment() {
         // Required empty public constructor
@@ -101,7 +90,6 @@ public class MediaFragment extends Fragment {
         super.onCreate(savedInstanceState);
         user = FirebaseAuth.getInstance().getCurrentUser();
         db = FirebaseFirestore.getInstance();
-        auth = FirebaseAuth.getInstance();
         sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         place = sp.getString("place", "");
     }
@@ -170,7 +158,7 @@ public class MediaFragment extends Fragment {
                         if (media.isVideo()) {
                             Intent intent = new Intent(getContext(), VideoActivity.class);
                             intent.putExtra("video_url", media.getUrl());
-                            intent.putExtra("video_info", mediaInfo + getString(R.string.ago));
+                            intent.putExtra("video_info", mediaInfo);
                             startActivity(intent);
                         } else {
                             List<Media> list = new ArrayList<>();
@@ -192,7 +180,7 @@ public class MediaFragment extends Fragment {
                     public boolean onLongClick(View v) {
                         Media media = (Media) v.getTag();
                         String docId = (String) v.getTag(R.id.media_id);
-                        boolean admin = "dyussenaliyev@gmail.com".equals(user.getEmail()) || "erzhands@gmail.com".equals(user.getEmail());
+                        boolean admin = "dyussenaliyev@gmail.com".equals(user.getEmail()) || "erzhands@gmail.com".equals(user.getEmail()) || sp.getBoolean("admin", false);
                         if (user.getUid().equals(media.getOwnerId()) || admin) {
                             showDeleteMediaDialog(media, docId);
                         }
@@ -205,9 +193,6 @@ public class MediaFragment extends Fragment {
 
             @Override
             public void onDataChanged() {
-                // Called each time there is a new query snapshot. You may want to use this method
-                // to hide a loading spinner or check for the "no documents" state and update your UI.
-                // ...
                 Log.d(TAG, "data change");
                 media.smoothScrollToPosition(0);
                 noMediaText.setVisibility(mediaAdapter != null && mediaAdapter.getItemCount() == 0 ? View.VISIBLE : View.INVISIBLE);
@@ -238,59 +223,22 @@ public class MediaFragment extends Fragment {
             }
         });
         builder.create().show();
-
     }
 
     private void doAddMedia() {
-        Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-        File photoFile = null;
-        try {
-            photoFile = createImageFile();
-        } catch (IOException ex) {
-        }
-        // Continue only if the File was successfully created
-        if (photoFile != null) {
-            picUri = FileProvider.getUriForFile(getContext(),
-                    "nurzhands.kxtt.fileprovider",
-                    photoFile);
-            takePictureIntent.putExtra(MediaStore.EXTRA_OUTPUT, picUri);
-        }
-        Intent takeVideoIntent = new Intent(MediaStore.ACTION_VIDEO_CAPTURE);
-        Intent chooserIntent = Intent.createChooser(takePictureIntent, getString(R.string.capture_image_or_video));
-        chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, new Intent[]{takeVideoIntent});
-        if (takePictureIntent.resolveActivity(getContext().getPackageManager()) != null) {
-            startActivityForResult(chooserIntent, RC_MEDIA);
-        }
-    }
-
-    private File createImageFile() throws IOException {
-        // Create an image file name
-        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-        String imageFileName = "JPEG_" + timeStamp + "_";
-        File storageDir = getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
-        File image = File.createTempFile(
-                imageFileName,  /* prefix */
-                ".jpg",         /* suffix */
-                storageDir      /* directory */
-        );
-
-        imageFile = image;
-
-        return image;
-    }
-
-    private void addImageToGallery() {
-        ContentValues values = new ContentValues();
-        values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
-        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
-        values.put(MediaStore.MediaColumns.DATA, imageFile.getAbsolutePath());
-        getContext().getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-    }
-
-    private void addToPhoneGallery() {
-        Intent mediaScanIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
-        mediaScanIntent.setData(picUri);
-        getContext().sendBroadcast(mediaScanIntent);
+        Matisse.from(this)
+                .choose(MimeType.ofAll())
+                .countable(true)
+                .capture(true)
+                .captureStrategy(new CaptureStrategy(true, "nurzhands.kxtt.fileprovider", "TT App"))
+                .countable(false)
+                //.maxSelectable(1)
+                .spanCount(3)
+                .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
+                .thumbnailScale(0.85f)
+                .imageEngine(new Glide4Engine())
+                .theme(R.style.Matisse_Dracula)
+                .forResult(RC_MEDIA);
     }
 
     private void uploadMedia(Uri uri, final boolean isVideo) {
@@ -359,15 +307,11 @@ public class MediaFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == RC_MEDIA && resultCode == RESULT_OK) {
-            if (data.getData() == null) {
-                addImageToGallery();
-                addToPhoneGallery();
-                uploadMedia(picUri, false);
-            } else {
-                Uri videoUri = data.getData();
-                uploadMedia(videoUri, true);
+            List<Uri> selected = Matisse.obtainResult(data);
+            if (!selected.isEmpty()) {
+                Uri uri = selected.get(0);
+                uploadMedia(uri, uri.toString().contains("video"));
             }
-
         }
     }
 

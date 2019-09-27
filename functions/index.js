@@ -64,6 +64,12 @@ exports.addGame = functions.firestore
         }
       };
 
+      if (game.firstScore > game.secondScore) {
+        updateRatings(game.firstUid, game.secondUid);
+      } else {
+        updateRatings(game.secondUid, game.firstUid);
+      }
+
       return admin.messaging().sendToTopic(place, payload);
     });
 
@@ -84,3 +90,7 @@ exports.addGameResult = functions.firestore
 
       return admin.messaging().sendToDevice(game.secondToken, payload);
     });
+
+function updateRatings(winnerUid, loserUid) {
+
+}
