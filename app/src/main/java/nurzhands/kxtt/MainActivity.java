@@ -1,12 +1,17 @@
 package nurzhands.kxtt;
 
+import android.Manifest;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -18,15 +23,24 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
 import com.firebase.ui.auth.AuthUI;
+import com.google.android.gms.common.internal.Constants;
+import com.google.android.gms.location.Geofence;
+import com.google.android.gms.location.GeofencingClient;
+import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -43,6 +57,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Nullable;
 
@@ -53,6 +68,7 @@ import nurzhands.kxtt.models.User;
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "nurzhands";
+    private static final int PERMISSION_LOCATION = 123;
 
     private FirebaseUser user;
     private FirebaseFirestore db;
@@ -63,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
     private List<String> placeIds = new ArrayList<>();
     private int checkedItem;
     private Place placeInfo;
+    private GeofencingClient geofencingClient;
+    private PendingIntent geofencePendingIntent;
 
     private void showPlayingFragment() {
         attachFragment(new PlayingFragment(), "playing");
@@ -166,6 +184,79 @@ public class MainActivity extends AppCompatActivity {
         setupBottomBar();
         showPlayingFragment();
         subscribeToPendingGameResults();
+        setupLocationUpdates();
+    }
+
+    private void setupLocationUpdates() {
+        List<String> permissions = new ArrayList<>();
+        permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
+        if (android.os.Build.VERSION.SDK_INT >= 29) {
+            permissions.add(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+        }
+
+        for (int i = permissions.size() - 1; i >= 0; i--) {
+            String permission = permissions.get(i);
+            if (ContextCompat.checkSelfPermission(this, permission)
+                    == PackageManager.PERMISSION_GRANTED) {
+                permissions.remove(i);
+            }
+        }
+
+        if (!permissions.isEmpty()) {
+            ActivityCompat.requestPermissions(this,
+                    (String[]) permissions.toArray(),
+                    PERMISSION_LOCATION);
+            return;
+        }
+
+        geofencingClient = LocationServices.getGeofencingClient(this);
+
+        List<Geofence> geofences = new ArrayList<>();
+        for (Place place : places) {
+            geofences.add(getGeofence(place));
+        }
+
+        GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
+        builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
+        builder.addGeofences(geofences);
+        GeofencingRequest geofencingRequest = builder.build();
+
+        geofencingClient.addGeofences(geofencingRequest, getGeofencePendingIntent())
+                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        Log.i("nurzhands", "location updates done");
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        setupLocationUpdates();
+                    }
+                });
+    }
+
+    private Geofence getGeofence(Place place) {
+        return new Geofence.Builder()
+                .setRequestId(place.getId())
+                .setCircularRegion(place.getLat(), place.getLon(), /* meters */ 100)
+                .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL |
+                        Geofence.GEOFENCE_TRANSITION_EXIT)
+                .setLoiteringDelay((int) TimeUnit.MINUTES.toMillis(5))
+                .build();
+    }
+
+    private PendingIntent getGeofencePendingIntent() {
+        // Reuse the PendingIntent if we already have it.
+        if (geofencePendingIntent != null) {
+            return geofencePendingIntent;
+        }
+        Intent intent = new Intent(this, GeofenceBroadcastReceiver.class);
+        // We use FLAG_UPDATE_CURRENT so that we get the same pending intent back when
+        // calling addGeofences() and removeGeofences().
+        geofencePendingIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.
+                FLAG_UPDATE_CURRENT);
+        return geofencePendingIntent;
     }
 
     private void subscribeToPendingGameResults() {
@@ -321,6 +412,40 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode,
+                                           String[] permissions, int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_LOCATION: {
+                for (int i = 0; i < grantResults.length; i++) {
+                    if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
+                        final Snackbar noPerms = Snackbar.make(findViewById(android.R.id.content), R.string.no_location_permission, Snackbar.LENGTH_LONG);
+                        noPerms.setAction(R.string.open_permissions, new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                Uri uri = Uri.fromParts("package", getPackageName(), null);
+                                intent.setData(uri);
+                                startActivity(intent);
+                                noPerms.dismiss();
+                            }
+                        });
+                        noPerms.show();
+                        return;
+                    }
+                }
+                if (grantResults.length > 0) {
+                    setupLocationUpdates();
+                }
+                return;
+            }
+
+            // other 'case' lines to check for other
+            // permissions this app might request.
+        }
+    }
 
     private void askSignOut() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
