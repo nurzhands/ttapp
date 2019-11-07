@@ -65,6 +65,8 @@ import nurzhands.kxtt.models.Game;
 import nurzhands.kxtt.models.Place;
 import nurzhands.kxtt.models.User;
 
+import static com.google.android.gms.location.Geofence.NEVER_EXPIRE;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "nurzhands";
@@ -188,6 +190,29 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setupLocationUpdates() {
+        if (places.isEmpty()) {
+            db.collection("places")
+                    .get()
+                    .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                        @Override
+                        public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                            if (task.isSuccessful()) {
+                                places.clear();
+                                placeIds.clear();
+                                for (QueryDocumentSnapshot document : task.getResult()) {
+                                    Place place = document.toObject(Place.class);
+                                    places.add(place);
+                                    placeIds.add(document.getId());
+                                }
+                                setupLocationUpdates();
+                            } else {
+                                Toast.makeText(MainActivity.this, "Error getting documents: " + task.getException(), Toast.LENGTH_LONG).show();
+                            }
+                        }
+                    });
+            return;
+        }
+
         List<String> permissions = new ArrayList<>();
         permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
         if (android.os.Build.VERSION.SDK_INT >= 29) {
@@ -202,9 +227,13 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
+        String[] permsArray = new String[permissions.size()];
+        for (int i = 0; i < permissions.size(); i++) {
+            permsArray[i] = permissions.get(i);
+        }
         if (!permissions.isEmpty()) {
             ActivityCompat.requestPermissions(this,
-                    (String[]) permissions.toArray(),
+                    permsArray,
                     PERMISSION_LOCATION);
             return;
         }
@@ -212,37 +241,43 @@ public class MainActivity extends AppCompatActivity {
         geofencingClient = LocationServices.getGeofencingClient(this);
 
         List<Geofence> geofences = new ArrayList<>();
-        for (Place place : places) {
-            geofences.add(getGeofence(place));
+        for (int i = 0; i < places.size(); i++) {
+            geofences.add(getGeofence(placeIds.get(i), places.get(i)));
         }
 
         GeofencingRequest.Builder builder = new GeofencingRequest.Builder();
         builder.setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_DWELL);
         builder.addGeofences(geofences);
-        GeofencingRequest geofencingRequest = builder.build();
+        final GeofencingRequest geofencingRequest = builder.build();
 
-        geofencingClient.addGeofences(geofencingRequest, getGeofencePendingIntent())
-                .addOnSuccessListener(this, new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        Log.i("nurzhands", "location updates done");
-                    }
-                })
-                .addOnFailureListener(this, new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        setupLocationUpdates();
-                    }
-                });
+        geofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                geofencingClient.addGeofences(geofencingRequest, getGeofencePendingIntent())
+                        .addOnSuccessListener(MainActivity.this, new OnSuccessListener<Void>() {
+                            @Override
+                            public void onSuccess(Void aVoid) {
+                                Log.i("nurzhands", "location updates done");
+                            }
+                        })
+                        .addOnFailureListener(MainActivity.this, new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(MainActivity.this, "Failed to setup location updates", Toast.LENGTH_LONG).show();
+                            }
+                        });
+            }
+        });
     }
 
-    private Geofence getGeofence(Place place) {
+    private Geofence getGeofence(String placeId, Place place) {
         return new Geofence.Builder()
-                .setRequestId(place.getId())
+                .setRequestId(placeId)
                 .setCircularRegion(place.getLat(), place.getLon(), /* meters */ 100)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_DWELL |
                         Geofence.GEOFENCE_TRANSITION_EXIT)
-                .setLoiteringDelay((int) TimeUnit.MINUTES.toMillis(5))
+                .setLoiteringDelay((int) 5 * 60 * 1000)
+                .setExpirationDuration(NEVER_EXPIRE)
                 .build();
     }
 
@@ -420,7 +455,7 @@ public class MainActivity extends AppCompatActivity {
             case PERMISSION_LOCATION: {
                 for (int i = 0; i < grantResults.length; i++) {
                     if (grantResults[i] != PackageManager.PERMISSION_GRANTED) {
-                        final Snackbar noPerms = Snackbar.make(findViewById(android.R.id.content), R.string.no_location_permission, Snackbar.LENGTH_LONG);
+                        final Snackbar noPerms = Snackbar.make(findViewById(android.R.id.content), R.string.no_location_permission, Snackbar.LENGTH_INDEFINITE);
                         noPerms.setAction(R.string.open_permissions, new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {

@@ -18,7 +18,7 @@ exports.modifyPlayer = functions.firestore
 
       const payload = {
         notification: {
-          title: !deleted ? `New ${place} player!` : `${place} player leaves...`,
+          title: !deleted ? `New ${place.name} player!` : `${place.name} player leaves...`,
           body: `${playerName} checked ` + (!deleted ? 'in!' : 'out.'),
         }
       };
@@ -38,7 +38,7 @@ exports.addMedia = functions.firestore
 
       const payload = {
         notification: {
-          title: `New ${place} media added!`,
+          title: `New ${place.name} media added!`,
           body: `${media.owner} added a ` + (pic ? 'picture!' : 'video!'),
         }
       };
@@ -59,7 +59,7 @@ exports.addGame = functions.firestore
 
       const payload = {
         notification: {
-          title: `New ${place} game result added!`,
+          title: `New ${place.name} game result added!`,
           body: `${game.firstName} vs ${game.secondName}!`,
         }
       };
@@ -90,7 +90,3 @@ exports.addGameResult = functions.firestore
 
       return admin.messaging().sendToDevice(game.secondToken, payload);
     });
-
-function updateRatings(winnerUid, loserUid) {
-
-}

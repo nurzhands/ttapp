@@ -80,6 +80,7 @@ public class MediaFragment extends Fragment {
     private SharedPreferences sp;
     private String place;
     private View noMediaText;
+    private FirebaseStorage storage;
 
     public MediaFragment() {
         // Required empty public constructor
@@ -228,11 +229,10 @@ public class MediaFragment extends Fragment {
     private void doAddMedia() {
         Matisse.from(this)
                 .choose(MimeType.ofAll())
-                .countable(true)
                 .capture(true)
                 .captureStrategy(new CaptureStrategy(true, "nurzhands.kxtt.fileprovider", "TT App"))
                 .countable(false)
-                //.maxSelectable(1)
+                .maxSelectable(1)
                 .spanCount(3)
                 .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT)
                 .thumbnailScale(0.85f)
@@ -242,7 +242,6 @@ public class MediaFragment extends Fragment {
     }
 
     private void uploadMedia(Uri uri, final boolean isVideo) {
-        FirebaseStorage storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReference();
         final StorageReference mediaRef = storageRef.child("media/" + uri.getLastPathSegment());
         UploadTask uploadTask = mediaRef.putFile(uri);
@@ -309,8 +308,10 @@ public class MediaFragment extends Fragment {
         if (requestCode == RC_MEDIA && resultCode == RESULT_OK) {
             List<Uri> selected = Matisse.obtainResult(data);
             if (!selected.isEmpty()) {
-                Uri uri = selected.get(0);
-                uploadMedia(uri, uri.toString().contains("video"));
+                storage = FirebaseStorage.getInstance();
+                for (Uri uri : selected) {
+                    uploadMedia(uri, uri.toString().contains("video"));
+                }
             }
         }
     }

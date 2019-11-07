@@ -223,7 +223,7 @@ public class PlayingFragment extends Fragment {
     }
 
     private void addCurrentPlayer() {
-        Player player = new Player(user.getDisplayName(), user.getPhotoUrl().toString(), System.currentTimeMillis());
+        Player player = new Player(user.getDisplayName(), user.getPhotoUrl() == null ? "" : user.getPhotoUrl().toString(), System.currentTimeMillis());
         db.collection("places/" + place + "/playing").document(user.getUid()).set(player);
     }
 

@@ -7,8 +7,13 @@ import android.util.Log;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.List;
+
+import nurzhands.kxtt.models.Player;
 
 public class GeofenceBroadcastReceiver extends BroadcastReceiver {
     private static final String TAG = "nurzhands";
@@ -31,7 +36,23 @@ public class GeofenceBroadcastReceiver extends BroadcastReceiver {
             // multiple geofences.
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
 
-            triggeringGeofences.get(0).getRequestId()
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user == null) {
+                return;
+            }
+
+            Player player = new Player(user.getDisplayName(), user.getPhotoUrl() == null ? "" : user.getPhotoUrl().toString(), System.currentTimeMillis());
+            FirebaseFirestore db = FirebaseFirestore.getInstance();
+
+            for (Geofence geofence : triggeringGeofences) {
+                String place = geofence.getRequestId();
+                if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_DWELL) {
+                    db.collection("places/" + place + "/playing").document(user.getUid()).set(player);
+                } else {
+                    db.collection("places/" + place + "/playing").document(user.getUid()).delete();
+                }
+            }
 
             // Get the transition details as a String.
 //            String geofenceTransitionDetails = getGeofenceTransitionDetails(
